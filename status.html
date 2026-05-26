@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NightReplays coverage</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #161a22;
+    --border: #232936;
+    --text: #d8dee9;
+    --muted: #6c7689;
+    --present-kbs: #2ea043;
+    --present-kbs-light: #56d364;
+    --present-mbc: #4d8de5;
+    --present-mbc-light: #79afff;
+    --missing: #3a2128;
+    --no-show: #1b1f29;
+    --accent: #5fa8ff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.55 ui-sans-serif, system-ui, -apple-system,
+      "Apple SD Gothic Neo", "Pretendard", sans-serif;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .lede { color: var(--muted); margin: 0 0 24px; }
+  .section { margin-bottom: 40px; }
+  .section h2 { font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+  .section .sub { color: var(--muted); margin: 0 0 16px; font-size: 13px; }
+  .stats {
+    display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 20px;
+    padding: 14px 18px; background: var(--panel);
+    border: 1px solid var(--border); border-radius: 8px;
+  }
+  .stat .num { font-size: 22px; font-weight: 600; }
+  .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.05em; }
+  .year-block { margin-bottom: 22px; }
+  .year-block h3 { font-size: 13px; font-weight: 600; color: var(--muted);
+    margin: 0 0 8px; letter-spacing: 0.04em; }
+  .heatmap {
+    display: grid; grid-auto-flow: column;
+    grid-template-rows: repeat(7, 14px);
+    grid-auto-columns: 14px;
+    gap: 3px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    z-index: 20;
+  }
+  .day {
+    width: 14px; height: 14px; border-radius: 3px;
+    background: var(--no-show); position: relative; cursor: default;
+  }
+  .day.present-kbs { background: var(--present-kbs); cursor: pointer; }
+  .day.present-kbs:hover { outline: 2px solid var(--present-kbs-light); }
+  .day.present-mbc { background: var(--present-mbc); cursor: pointer; }
+  .day.present-mbc:hover { outline: 2px solid var(--present-mbc-light); }
+  .day.missing { background: var(--missing); }
+  .day.no-show { background: var(--no-show); }
+  .day.future { background: transparent; }
+  #tooltip {
+    position: fixed; top: 0; left: 0;
+    background: var(--panel); border: 1px solid var(--border);
+    padding: 4px 8px; border-radius: 4px;
+    white-space: nowrap; font-size: 12px; color: var(--text);
+    pointer-events: none; z-index: 9999;
+    opacity: 0; transform: translate3d(0, 0, 0);
+    transition: opacity 0.1s;
+  }
+  #tooltip.show { opacity: 1; }
+  .legend {
+    display: flex; gap: 14px; align-items: center; margin-top: 10px;
+    font-size: 12px; color: var(--muted); flex-wrap: wrap;
+  }
+  .legend .swatch {
+    display: inline-block; width: 12px; height: 12px;
+    border-radius: 3px; vertical-align: middle; margin-right: 5px;
+  }
+  .months {
+    display: grid; grid-auto-flow: column;
+    grid-auto-columns: 14px; gap: 3px;
+    margin-bottom: 4px; height: 14px; font-size: 10px; color: var(--muted);
+    position: relative; z-index: 1;
+  }
+  .months span { position: absolute; top: 0; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 32px;
+    border-top: 1px solid var(--border); padding-top: 12px; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .loading { color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>NightReplays coverage</h1>
+  <p class="lede">KBS '밤을 잊은 그대에게' + MBC '완벽한 하루 이상순입니다' — 일자별 슬림 JSON 생성 현황.</p>
+
+  <div id="error" style="display:none; color:#ff6b6b; margin-bottom: 20px;"></div>
+
+  <section class="section" id="kbs-section">
+    <h2>KBS '밤을 잊은 그대에게'</h2>
+    <p class="sub">유지원의 KBS 2FM · 매일 22:00–24:00 KST</p>
+    <div class="stats" id="kbs-stats">
+      <div class="stat"><div class="num loading">…</div><div class="label">processed</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">expected</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">missing</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">latest</div></div>
+    </div>
+    <div id="kbs-years"></div>
+    <div class="legend">
+      <span><span class="swatch" style="background: var(--present-kbs)"></span>processed</span>
+      <span><span class="swatch" style="background: var(--missing)"></span>missing</span>
+    </div>
+  </section>
+
+  <section class="section" id="mbc-section">
+    <h2>MBC '완벽한 하루 이상순입니다'</h2>
+    <p class="sub">이상순의 MBC FM4U · 매일 16:00–18:00 (방송 휴무 없음)</p>
+    <div class="stats" id="mbc-stats">
+      <div class="stat"><div class="num loading">…</div><div class="label">processed</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">expected</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">missing</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">latest</div></div>
+    </div>
+    <div id="mbc-years"></div>
+    <div class="legend">
+      <span><span class="swatch" style="background: var(--present-mbc)"></span>processed</span>
+      <span><span class="swatch" style="background: var(--missing)"></span>missing</span>
+    </div>
+  </section>
+
+  <footer>
+    데이터: <a href="manifest.json">manifest.json</a> ·
+    소스: <a href="https://github.com/nvisio/NightReplays">nvisio/NightReplays</a> ·
+    클릭한 날짜의 JSON: <code>/kbs/YYYYMMDD.json</code> or <code>/mbc/YYYYMMDD.json</code>
+  </footer>
+</div>
+<div id="tooltip" role="tooltip"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// Floating tooltip pinned to body so it can never be clipped by an
+// overflowing parent (e.g. .heatmap with horizontal scroll).
+const tooltipEl = $("tooltip");
+function attachTooltip(el, text) {
+  el.addEventListener("mouseenter", () => {
+    tooltipEl.textContent = text;
+    tooltipEl.classList.add("show");
+  });
+  el.addEventListener("mousemove", e => {
+    const offset = 12;
+    let x = e.clientX + offset, y = e.clientY + offset;
+    const rect = tooltipEl.getBoundingClientRect();
+    if (x + rect.width > window.innerWidth - 4) x = e.clientX - rect.width - offset;
+    if (y + rect.height > window.innerHeight - 4) y = e.clientY - rect.height - offset;
+    tooltipEl.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+  });
+  el.addEventListener("mouseleave", () => {
+    tooltipEl.classList.remove("show");
+  });
+}
+
+function pad(n) { return n.toString().padStart(2, "0"); }
+function ymd(d) { return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`; }
+function startOfWeek(d) {  // Monday start
+  const x = new Date(d); const day = (x.getDay() + 6) % 7;
+  x.setDate(x.getDate() - day); x.setHours(0,0,0,0); return x;
+}
+
+/* Render one program's heatmap into the given container.
+ * opts:
+ *   dates: sorted array of YYYYMMDD strings
+ *   presentClass: 'present-kbs' | 'present-mbc'
+ *   pathPrefix: '/kbs' | '/mbc'
+ *   noShowDow:  weekday with no broadcast (0=Sun, null=none)
+ *   statsEl, yearsEl
+ */
+function renderProgram({ dates, presentClass, pathPrefix, noShowDow, statsEl, yearsEl }) {
+  const set = new Set(dates);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const firstDate = dates.length ? new Date(
+    +dates[0].slice(0,4), +dates[0].slice(4,6)-1, +dates[0].slice(6,8)
+  ) : new Date(today.getFullYear(), 0, 1);
+  const startYear = firstDate.getFullYear();
+  const endYear = today.getFullYear();
+
+  let totalShown = 0, totalMissing = 0;
+  for (let y = endYear; y >= startYear; y--) {
+    const yearStart = new Date(y, 0, 1);
+    const yearEnd = new Date(y, 11, 31);
+    const cellStart = startOfWeek(yearStart);
+    const cellEnd = startOfWeek(yearEnd); cellEnd.setDate(cellEnd.getDate() + 6);
+
+    const block = document.createElement("div");
+    block.className = "year-block";
+    const heading = document.createElement("h3");
+    heading.textContent = y;
+    block.appendChild(heading);
+
+    const months = document.createElement("div");
+    months.className = "months";
+    block.appendChild(months);
+
+    const grid = document.createElement("div");
+    grid.className = "heatmap";
+    block.appendChild(grid);
+
+    let lastMonth = -1; let weekCount = 0;
+    for (let d = new Date(cellStart); d <= cellEnd; d.setDate(d.getDate() + 1)) {
+      const cell = document.createElement("div");
+      cell.className = "day";
+      const cellDate = new Date(d);
+      if (cellDate.getFullYear() === y) {
+        const key = ymd(cellDate);
+        const isFuture = cellDate > today;
+        const dow = cellDate.getDay();
+        if (set.has(key)) {
+          cell.classList.add(presentClass);
+          const f = `${pathPrefix}/${key}.json`;
+          attachTooltip(cell, `${key} · ✓ ${f}`);
+          cell.addEventListener("click", () => { window.location.href = f; });
+          totalShown++;
+        } else if (isFuture) {
+          cell.classList.add("future");
+        } else if (noShowDow !== null && dow === noShowDow) {
+          cell.classList.add("no-show");
+          attachTooltip(cell, `${key} · 방송없음`);
+        } else {
+          cell.classList.add("missing");
+          attachTooltip(cell, `${key} · 누락`);
+          totalMissing++;
+        }
+      } else {
+        cell.classList.add("future");
+      }
+      grid.appendChild(cell);
+
+      if (cellDate.getDay() === 1) {
+        weekCount++;
+        if (cellDate.getFullYear() === y && cellDate.getMonth() !== lastMonth) {
+          lastMonth = cellDate.getMonth();
+          const lab = document.createElement("span");
+          lab.textContent = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][lastMonth];
+          lab.style.left = ((weekCount - 1) * 17) + "px";
+          months.appendChild(lab);
+        }
+      }
+    }
+    yearsEl.appendChild(block);
+  }
+
+  const stats = statsEl.children;
+  stats[0].querySelector(".num").textContent = totalShown;
+  stats[0].querySelector(".num").classList.remove("loading");
+  stats[1].querySelector(".num").textContent = totalShown + totalMissing;
+  stats[1].querySelector(".num").classList.remove("loading");
+  stats[2].querySelector(".num").textContent = totalMissing;
+  stats[2].querySelector(".num").classList.remove("loading");
+  const latest = dates[dates.length - 1];
+  stats[3].querySelector(".num").textContent = latest
+    ? `${latest.slice(0,4)}-${latest.slice(4,6)}-${latest.slice(6,8)}` : "—";
+  stats[3].querySelector(".num").classList.remove("loading");
+}
+
+async function load() {
+  let manifest;
+  try {
+    const r = await fetch("manifest.json", { cache: "no-cache" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    manifest = await r.json();
+  } catch (err) {
+    $("error").textContent = "manifest.json 로딩 실패: " + err.message;
+    $("error").style.display = "block";
+    return;
+  }
+
+  renderProgram({
+    dates: (manifest.kbs || []).slice().sort(),
+    presentClass: "present-kbs",
+    pathPrefix: "/kbs",
+    noShowDow: null,   // KBS airs every day
+    statsEl: $("kbs-stats"),
+    yearsEl: $("kbs-years"),
+  });
+  renderProgram({
+    dates: (manifest.mbc || []).slice().sort(),
+    presentClass: "present-mbc",
+    pathPrefix: "/mbc",
+    noShowDow: null,
+    statsEl: $("mbc-stats"),
+    yearsEl: $("mbc-years"),
+  });
+}
+
+load();
+</script>
+</body>
+</html>

@@ -33,6 +33,24 @@ jobs:
           # the processor.
           cp CNAME _site/CNAME
           touch _site/.nojekyll
+          # Coverage dashboard at /status.html — fetches manifest.json which
+          # we generate here so it's always in sync with the deployed JSONs.
+          cp status.html _site/status.html
+          python3 -c "
+          import json, os, re
+          out = {'kbs': [], 'mbc': []}
+          for program in ('kbs', 'mbc'):
+              d = os.path.join('_site', program)
+              if not os.path.isdir(d):
+                  continue
+              out[program] = sorted(
+                  f[:-5] for f in os.listdir(d)
+                  if re.match(r'^\d{8}\.json$', f)
+              )
+          with open('_site/manifest.json', 'w') as f:
+              json.dump(out, f)
+          print(f\"manifest: kbs={len(out['kbs'])} mbc={len(out['mbc'])}\")
+          "
           echo "Staged $(find _site -name '*.json' | wc -l) JSON files"
 
       - uses: actions/configure-pages@v5
