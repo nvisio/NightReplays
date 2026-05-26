@@ -28,7 +28,11 @@ jobs:
         run: |
           mkdir -p _site
           cp -r kbs mbc _site/
-          # Surface the file count so a glance at the run log confirms it.
+          # CNAME pins the custom subdomain (nightreplays.nvis.io); .nojekyll
+          # disables Jekyll so directories named like Jekyll specials don't trip
+          # the processor.
+          cp CNAME _site/CNAME
+          touch _site/.nojekyll
           echo "Staged $(find _site -name '*.json' | wc -l) JSON files"
 
       - uses: actions/configure-pages@v5
