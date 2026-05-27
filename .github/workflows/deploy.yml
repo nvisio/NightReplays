@@ -38,15 +38,32 @@ jobs:
           cp status.html _site/status.html
           python3 -c "
           import json, os, re
-          out = {'kbs': [], 'mbc': []}
+          # Per-date stats power the heatmap opacity in status.html — each
+          # entry is [matched, total] where matched counts songs with an
+          # appleMusicId. Stays compact: ~25 bytes/date.
+          out = {'kbs': [], 'mbc': [], 'kbsStats': {}, 'mbcStats': {}}
           for program in ('kbs', 'mbc'):
               d = os.path.join('_site', program)
               if not os.path.isdir(d):
                   continue
-              out[program] = sorted(
-                  f[:-5] for f in os.listdir(d)
-                  if re.match(r'^\d{8}\.json$', f)
-              )
+              dates, stats = [], {}
+              for f in sorted(os.listdir(d)):
+                  m = re.match(r'^(\d{8})\.json$', f)
+                  if not m:
+                      continue
+                  date = m.group(1)
+                  dates.append(date)
+                  try:
+                      with open(os.path.join(d, f), encoding='utf-8') as fp:
+                          songs = json.load(fp).get('songs', [])
+                      stats[date] = [
+                          sum(1 for s in songs if s.get('appleMusicId')),
+                          len(songs),
+                      ]
+                  except (OSError, json.JSONDecodeError):
+                      pass
+              out[program] = dates
+              out[program + 'Stats'] = stats
           with open('_site/manifest.json', 'w') as f:
               json.dump(out, f)
           print(f\"manifest: kbs={len(out['kbs'])} mbc={len(out['mbc'])}\")

@@ -108,12 +108,14 @@
       <div class="stat"><div class="num loading">…</div><div class="label">processed</div></div>
       <div class="stat"><div class="num loading">…</div><div class="label">expected</div></div>
       <div class="stat"><div class="num loading">…</div><div class="label">missing</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">matched</div></div>
       <div class="stat"><div class="num loading">…</div><div class="label">latest</div></div>
     </div>
     <div id="kbs-years"></div>
     <div class="legend">
       <span><span class="swatch" style="background: var(--present-kbs)"></span>processed</span>
       <span><span class="swatch" style="background: var(--missing)"></span>missing</span>
+      <span>셀 투명도 = appleMusicId 매칭 비율</span>
     </div>
   </section>
 
@@ -124,12 +126,14 @@
       <div class="stat"><div class="num loading">…</div><div class="label">processed</div></div>
       <div class="stat"><div class="num loading">…</div><div class="label">expected</div></div>
       <div class="stat"><div class="num loading">…</div><div class="label">missing</div></div>
+      <div class="stat"><div class="num loading">…</div><div class="label">matched</div></div>
       <div class="stat"><div class="num loading">…</div><div class="label">latest</div></div>
     </div>
     <div id="mbc-years"></div>
     <div class="legend">
       <span><span class="swatch" style="background: var(--present-mbc)"></span>processed</span>
       <span><span class="swatch" style="background: var(--missing)"></span>missing</span>
+      <span>셀 투명도 = appleMusicId 매칭 비율</span>
     </div>
   </section>
 
@@ -175,14 +179,16 @@ function startOfWeek(d) {  // Monday start
 /* Render one program's heatmap into the given container.
  * opts:
  *   dates: sorted array of YYYYMMDD strings
+ *   stats: { 'YYYYMMDD': [matched, total] } — drives cell opacity + tooltip
  *   presentClass: 'present-kbs' | 'present-mbc'
  *   pathPrefix: '/kbs' | '/mbc'
  *   noShowDow:  weekday with no broadcast (0=Sun, null=none)
  *   statsEl, yearsEl
  */
-function renderProgram({ dates, presentClass, pathPrefix, noShowDow, statsEl, yearsEl }) {
+function renderProgram({ dates, stats, presentClass, pathPrefix, noShowDow, statsEl, yearsEl }) {
   const set = new Set(dates);
   const today = new Date(); today.setHours(0,0,0,0);
+  stats = stats || {};
 
   const firstDate = dates.length ? new Date(
     +dates[0].slice(0,4), +dates[0].slice(4,6)-1, +dates[0].slice(6,8)
@@ -191,6 +197,7 @@ function renderProgram({ dates, presentClass, pathPrefix, noShowDow, statsEl, ye
   const endYear = today.getFullYear();
 
   let totalShown = 0, totalMissing = 0;
+  let matchedSum = 0, totalSongs = 0;
   for (let y = endYear; y >= startYear; y--) {
     const yearStart = new Date(y, 0, 1);
     const yearEnd = new Date(y, 11, 31);
@@ -223,7 +230,18 @@ function renderProgram({ dates, presentClass, pathPrefix, noShowDow, statsEl, ye
         if (set.has(key)) {
           cell.classList.add(presentClass);
           const f = `${pathPrefix}/${key}.json`;
-          attachTooltip(cell, `${key} · ✓ ${f}`);
+          const stat = stats[key];
+          let tip = `${key} · ✓ ${f}`;
+          if (stat) {
+            const [matched, total] = stat;
+            matchedSum += matched; totalSongs += total;
+            // Floor at 0.4 so even zero-match cells stay clearly the program
+            // colour — the visual job is "more matches → richer cell".
+            const ratio = total > 0 ? matched / total : 1;
+            cell.style.opacity = (0.4 + 0.6 * ratio).toFixed(2);
+            tip = `${key} · ${matched}/${total} matched (${Math.round(ratio*100)}%)`;
+          }
+          attachTooltip(cell, tip);
           cell.addEventListener("click", () => { window.location.href = f; });
           totalShown++;
         } else if (isFuture) {
@@ -255,17 +273,27 @@ function renderProgram({ dates, presentClass, pathPrefix, noShowDow, statsEl, ye
     yearsEl.appendChild(block);
   }
 
-  const stats = statsEl.children;
-  stats[0].querySelector(".num").textContent = totalShown;
-  stats[0].querySelector(".num").classList.remove("loading");
-  stats[1].querySelector(".num").textContent = totalShown + totalMissing;
-  stats[1].querySelector(".num").classList.remove("loading");
-  stats[2].querySelector(".num").textContent = totalMissing;
-  stats[2].querySelector(".num").classList.remove("loading");
+  const cards = statsEl.children;
+  cards[0].querySelector(".num").textContent = totalShown;
+  cards[0].querySelector(".num").classList.remove("loading");
+  cards[1].querySelector(".num").textContent = totalShown + totalMissing;
+  cards[1].querySelector(".num").classList.remove("loading");
+  cards[2].querySelector(".num").textContent = totalMissing;
+  cards[2].querySelector(".num").classList.remove("loading");
+  const matchedCard = cards[3]?.querySelector(".num");
+  if (matchedCard) {
+    matchedCard.textContent = totalSongs
+      ? `${Math.round(100 * matchedSum / totalSongs)}%`
+      : "—";
+    matchedCard.classList.remove("loading");
+  }
+  const latestCard = cards[4]?.querySelector(".num");
   const latest = dates[dates.length - 1];
-  stats[3].querySelector(".num").textContent = latest
-    ? `${latest.slice(0,4)}-${latest.slice(4,6)}-${latest.slice(6,8)}` : "—";
-  stats[3].querySelector(".num").classList.remove("loading");
+  if (latestCard) {
+    latestCard.textContent = latest
+      ? `${latest.slice(0,4)}-${latest.slice(4,6)}-${latest.slice(6,8)}` : "—";
+    latestCard.classList.remove("loading");
+  }
 }
 
 async function load() {
@@ -282,6 +310,7 @@ async function load() {
 
   renderProgram({
     dates: (manifest.kbs || []).slice().sort(),
+    stats: manifest.kbsStats || {},
     presentClass: "present-kbs",
     pathPrefix: "/kbs",
     noShowDow: null,   // KBS airs every day
@@ -290,6 +319,7 @@ async function load() {
   });
   renderProgram({
     dates: (manifest.mbc || []).slice().sort(),
+    stats: manifest.mbcStats || {},
     presentClass: "present-mbc",
     pathPrefix: "/mbc",
     noShowDow: null,
