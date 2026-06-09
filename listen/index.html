@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Night Replays</title>
+
+  <!-- Generic OpenGraph preview (per-date preview is a future upgrade) -->
+  <meta property="og:title" content="Night Replays">
+  <meta property="og:description" content="라디오 다시듣기 — 그날 방송을 곡과 함께">
+  <meta property="og:image" content="https://nightreplays.nvis.io/og.png">
+  <meta property="og:type" content="website">
+
+  <style>
+    :root { --accent: #7c3aee; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
+      background: #0d0d12; color: #f2f2f7; -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 480px; margin: 0 auto; padding: 28px 20px 48px; }
+    .art { width: 120px; height: 120px; border-radius: 16px; object-fit: cover; display: block; }
+    h1 { font-size: 24px; margin: 16px 0 2px; }
+    .sub { color: #a1a1aa; font-size: 15px; margin: 0; }
+    .date { color: var(--accent); font-weight: 600; margin: 10px 0 4px; }
+    .songs { list-style: none; padding: 0; margin: 20px 0 0; }
+    .songs li { padding: 10px 0; border-bottom: 1px solid #1f1f27; display: flex; gap: 10px; }
+    .idx { color: #6b6b76; min-width: 18px; font-variant-numeric: tabular-nums; }
+    .t { font-size: 15px; }
+    .a { color: #a1a1aa; font-size: 13px; }
+    .more { color: #6b6b76; font-size: 13px; padding-top: 10px; }
+    .cta {
+      display: block; text-align: center; margin-top: 28px; padding: 14px;
+      background: var(--accent); color: #fff; font-weight: 700; border-radius: 12px;
+      text-decoration: none;
+    }
+    .muted { color: #6b6b76; font-size: 12px; text-align: center; margin-top: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img id="art" class="art" alt="">
+    <h1 id="title">Night Replays</h1>
+    <p class="sub" id="sub"></p>
+    <p class="date" id="date"></p>
+    <ul class="songs" id="songs"></ul>
+    <a class="cta" href="https://testflight.apple.com/join/FGdk66E4">TestFlight에서 받기</a>
+    <p class="muted">Night Replays · 라디오 다시듣기</p>
+  </div>
+
+  <script>
+    const PROGRAMS = {
+      kbs: { title: "Night You", sub: "KBS 2FM",
+             art: "https://programres.kbs.co.kr/r2018-0187/2020/10/22/1603353268165_285970.jpg" },
+      mbc: { title: "Perfect Day", sub: "MBC FM4U",
+             art: "https://img.imbc.com/adams/Program/202410/133747209088767464.jpg" }
+    };
+    const params = new URLSearchParams(location.search);
+    const p = params.get("p");
+    const d = params.get("d");           // yyyyMMdd
+    const prog = PROGRAMS[p];
+
+    if (prog) {
+      document.getElementById("title").textContent = prog.title;
+      document.getElementById("sub").textContent = prog.sub;
+      const art = document.getElementById("art");
+      art.src = prog.art; art.alt = prog.title;
+    }
+    if (d && d.length === 8) {
+      document.getElementById("date").textContent =
+        `${d.slice(0,4)}. ${Number(d.slice(4,6))}. ${Number(d.slice(6,8))}`;
+    }
+
+    // Short, view-only song list from the same-origin slim JSON.
+    if (prog && d && d.length === 8) {
+      fetch(`/${p}/${d}.json`)
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(data => {
+          const songs = (data.songs || []);
+          const ul = document.getElementById("songs");
+          songs.slice(0, 6).forEach((s, i) => {
+            const title = s.boardTitle || s.songTitle || "";
+            const artist = s.boardArtist || s.artist || "";
+            const li = document.createElement("li");
+            li.innerHTML =
+              `<span class="idx">${i + 1}</span>` +
+              `<span><span class="t">${escapeHtml(title)}</span><br>` +
+              `<span class="a">${escapeHtml(artist)}</span></span>`;
+            ul.appendChild(li);
+          });
+          if (songs.length > 6) {
+            const more = document.createElement("li");
+            more.className = "more";
+            more.textContent = `외 ${songs.length - 6}곡`;
+            ul.appendChild(more);
+          }
+        })
+        .catch(() => { /* no JSON for this date — show program/date only */ });
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+  </script>
+</body>
+</html>

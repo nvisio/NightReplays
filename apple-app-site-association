@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appID": "JD6369T7Y6.com.nightreplays.app",
+        "paths": ["/listen/*", "/listen"]
+      }
+    ]
+  }
+}
