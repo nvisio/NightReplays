@@ -42,6 +42,9 @@ jobs:
           cp apple-app-site-association _site/apple-app-site-association
           cp listen/index.html _site/listen/index.html
           cp og.png _site/og.png
+          # Privacy policy at /privacy (App Store Connect privacy policy URL).
+          mkdir -p _site/privacy
+          cp privacy/index.html _site/privacy/index.html
           # Coverage dashboard at /status.html — fetches manifest.json which
           # we generate here so it's always in sync with the deployed JSONs.
           cp status.html _site/status.html
