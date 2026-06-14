@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Night Replays — Last night's radio, song by song</title>
+
+<meta name="description" content="Play last night's Korean late-night radio — KBS Night You and MBC Perfect Day — song by song, with the DJ's talk mixed back in. Pick any date, press play, drift off.">
+<meta name="theme-color" content="#08080c">
+<link rel="canonical" href="https://nightreplays.nvis.io/">
+<link rel="icon" href="/shots/app-icon.png">
+<link rel="apple-touch-icon" href="/shots/app-icon.png">
+
+<meta property="og:title" content="Night Replays — Last night's radio, song by song">
+<meta property="og:description" content="Korea's late-night radio, replayed. The DJ's talk, mixed back in with the songs. Pick any night, press play.">
+<meta property="og:image" content="https://nightreplays.nvis.io/og.png">
+<meta property="og:url" content="https://nightreplays.nvis.io/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..600;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>document.documentElement.className+=" js"</script>
+
+<style>
+:root{
+  --bg:#08080c;
+  --bg-2:#0c0c13;
+  --ink:#f4f1ea;
+  --ink-soft:#c8c4d2;
+  --muted:#8b8798;
+  --faint:#5a5766;
+  --kbs:#8b5cf6;       /* Night You · KBS 2FM */
+  --kbs-deep:#6d28d9;
+  --mbc:#42a5ff;       /* Perfect Day · MBC FM4U */
+  --mbc-deep:#1e6fd0;
+  --warm:#f0c089;      /* late-night dial glow */
+  --line:rgba(255,255,255,.08);
+  --card:rgba(255,255,255,.025);
+  --serif:"Fraunces",Georgia,serif;
+  --sans:"Hanken Grotesk",-apple-system,BlinkMacSystemFont,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+  line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+/* ── atmosphere ─────────────────────────────────────────────── */
+.atmos{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;mix-blend-mode:screen;animation:drift 22s ease-in-out infinite alternate}
+.glow.g1{width:60vw;height:60vw;left:-18vw;top:-22vw;background:radial-gradient(circle,rgba(139,92,246,.55),transparent 68%)}
+.glow.g2{width:58vw;height:58vw;right:-20vw;top:18vh;background:radial-gradient(circle,rgba(66,165,255,.45),transparent 68%);animation-delay:-7s}
+.glow.g3{width:46vw;height:46vw;left:24vw;bottom:-22vw;background:radial-gradient(circle,rgba(240,192,137,.18),transparent 70%);animation-delay:-13s}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(3vw,4vh,0) scale(1.12)}}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.5;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E")}
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+.stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.0;animation:twinkle 5s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.05}50%{opacity:.45}}
+
+main{position:relative;z-index:2}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ── nav ───────────────────────────────────────────────────── */
+nav{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;
+  max-width:1080px;margin:0 auto;padding:22px 24px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.2px}
+.brand img{width:30px;height:30px;border-radius:8px;box-shadow:0 4px 18px rgba(139,92,246,.4)}
+.brand b{font-weight:600}
+.nav-links{display:flex;gap:26px;align-items:center;font-size:14.5px}
+.nav-links a{color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+.nav-cta{color:var(--ink)!important;border:1px solid var(--line);padding:8px 16px;border-radius:999px;
+  background:rgba(255,255,255,.03);transition:all .2s}
+.nav-cta:hover{border-color:var(--kbs);box-shadow:0 0 24px rgba(139,92,246,.35)}
+@media(max-width:680px){.nav-links a:not(.nav-cta){display:none}}
+
+/* ── hero ──────────────────────────────────────────────────── */
+.hero{padding:64px 0 40px;display:grid;grid-template-columns:1.12fr .88fr;gap:28px;align-items:center}
+.kicker{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);margin-bottom:22px}
+.kicker .eq{display:inline-flex;gap:2.5px;align-items:flex-end;height:13px}
+.kicker .eq b{width:2.5px;background:linear-gradient(var(--kbs),var(--mbc));border-radius:2px;animation:eq 1.1s ease-in-out infinite}
+.kicker .eq b:nth-child(2){animation-delay:.18s}.kicker .eq b:nth-child(3){animation-delay:.36s}.kicker .eq b:nth-child(4){animation-delay:.54s}
+@keyframes eq{0%,100%{height:3px}50%{height:13px}}
+h1{font-family:var(--serif);font-weight:400;font-size:clamp(38px,5.1vw,60px);line-height:1.04;
+  letter-spacing:-.02em;margin:0 0 22px}
+h1 .em{font-style:italic;color:transparent;background:linear-gradient(105deg,var(--kbs),var(--warm) 60%,var(--mbc));-webkit-background-clip:text;background-clip:text}
+.lead{font-size:clamp(16px,2.1vw,19px);color:var(--ink-soft);max-width:30ch;margin:0 0 32px}
+.cta-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:9px;font-family:var(--sans);font-weight:600;font-size:15.5px;
+  text-decoration:none;padding:14px 24px;border-radius:14px;transition:transform .2s,box-shadow .3s}
+.btn-primary{color:#fff;background:linear-gradient(120deg,var(--kbs-deep),var(--mbc-deep));
+  box-shadow:0 10px 40px rgba(109,40,217,.45)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 16px 50px rgba(66,165,255,.45)}
+.btn-ghost{color:var(--ink);border:1px solid var(--line);background:rgba(255,255,255,.02)}
+.btn-ghost:hover{border-color:var(--mbc);color:#fff}
+.trial{margin-top:18px;font-size:13.5px;color:var(--faint)}
+.trial b{color:var(--ink-soft);font-weight:500}
+
+/* phones */
+.devices{position:relative;height:540px}
+.phone{position:absolute;width:224px;height:487px;border-radius:36px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.1);background:#000;
+  box-shadow:0 40px 90px rgba(0,0,0,.6)}
+.phone img{display:block;width:100%;height:100%;object-fit:cover;object-position:top}
+.phone.kbs{left:7%;top:24px;transform:rotate(-6deg);z-index:2;
+  box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 80px rgba(139,92,246,.4)}
+.phone.mbc{right:-2%;top:118px;transform:rotate(6deg);z-index:1;
+  box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 80px rgba(66,165,255,.35)}
+.phone.kbs{animation:float1 7s ease-in-out infinite}
+.phone.mbc{animation:float2 8s ease-in-out infinite}
+@keyframes float1{0%,100%{transform:rotate(-6deg) translateY(0)}50%{transform:rotate(-6deg) translateY(-16px)}}
+@keyframes float2{0%,100%{transform:rotate(6deg) translateY(0)}50%{transform:rotate(6deg) translateY(14px)}}
+@media(max-width:880px){
+  .hero{grid-template-columns:1fr;gap:8px;padding-top:36px;text-align:center}
+  .kicker,.cta-row{justify-content:center}
+  .lead{margin-left:auto;margin-right:auto}
+  .devices{height:480px;margin-top:18px;transform:scale(.92)}
+}
+@media(max-width:420px){.devices{transform:scale(.78)}}
+
+/* ── section frame ─────────────────────────────────────────── */
+section{padding:84px 0}
+.eyebrow{font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.sec-h{font-family:var(--serif);font-weight:400;font-size:clamp(28px,4vw,44px);letter-spacing:-.02em;
+  line-height:1.08;margin:0 0 16px}
+.sec-h .it{font-style:italic}
+.sec-sub{color:var(--ink-soft);font-size:16.5px;max-width:54ch}
+
+/* ── two stations ──────────────────────────────────────────── */
+.stations{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px}
+.st{position:relative;border-radius:22px;padding:30px;border:1px solid var(--line);
+  background:linear-gradient(160deg,var(--card),transparent);overflow:hidden;transition:transform .3s,border-color .3s}
+.st:hover{transform:translateY(-4px)}
+.st .freq{position:absolute;right:-10px;top:-16px;font-family:var(--serif);font-style:italic;
+  font-size:120px;line-height:1;opacity:.06}
+.st .tag{display:inline-block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+  padding:5px 11px;border-radius:999px;font-weight:600;margin-bottom:16px}
+.st h3{font-family:var(--serif);font-weight:500;font-size:30px;margin:0 0 4px;letter-spacing:-.01em}
+.st p{color:var(--ink-soft);font-size:15px;margin:8px 0 0}
+.st.kbs{border-color:rgba(139,92,246,.35)}
+.st.kbs:hover{box-shadow:0 24px 60px rgba(139,92,246,.22)}
+.st.kbs .tag{background:rgba(139,92,246,.16);color:#c4b5fd}
+.st.kbs .freq{color:var(--kbs)}
+.st.mbc{border-color:rgba(66,165,255,.3)}
+.st.mbc:hover{box-shadow:0 24px 60px rgba(66,165,255,.2)}
+.st.mbc .tag{background:rgba(66,165,255,.16);color:#a9d4ff}
+.st.mbc .freq{color:var(--mbc)}
+@media(max-width:680px){.stations{grid-template-columns:1fr}}
+
+/* ── mix / showcase ────────────────────────────────────────── */
+.showcase{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:24px}
+.showcase.flip{direction:rtl}.showcase.flip>*{direction:ltr}
+.shot-frame{border-radius:20px;overflow:hidden;border:1px solid var(--line);background:#000;
+  box-shadow:0 30px 70px rgba(0,0,0,.55)}
+.shot-frame img{display:block;width:100%;height:auto;aspect-ratio:1320/2868}
+.shot-frame.ipad img{aspect-ratio:2064/2752}
+.ipad-wrap{position:relative}
+.watch{position:absolute;right:-22px;bottom:-26px;width:33%;max-width:140px;border-radius:22px;
+  overflow:hidden;border:2px solid rgba(20,20,28,.9);background:#000;
+  box-shadow:0 22px 50px rgba(0,0,0,.6),0 0 50px rgba(139,92,246,.3);transform:rotate(4deg)}
+.watch img{display:block;width:100%;height:auto;aspect-ratio:422/514}
+.shot-frame.glow-mbc{box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 70px rgba(66,165,255,.22)}
+.steps{list-style:none;padding:0;margin:24px 0 0;counter-reset:s}
+.steps li{position:relative;padding:0 0 22px 52px;counter-increment:s}
+.steps li::before{content:counter(s,decimal-leading-zero);position:absolute;left:0;top:-2px;
+  font-family:var(--serif);font-style:italic;font-size:22px;
+  color:transparent;background:linear-gradient(var(--kbs),var(--mbc));-webkit-background-clip:text;background-clip:text}
+.steps li::after{content:"";position:absolute;left:14px;top:26px;bottom:6px;width:1px;background:var(--line)}
+.steps li:last-child::after{display:none}
+.steps b{display:block;font-size:17px;margin-bottom:2px}
+.steps span{color:var(--muted);font-size:14.5px}
+@media(max-width:780px){.showcase{grid-template-columns:1fr;gap:28px}.showcase.flip{direction:ltr}}
+
+/* ── features grid ─────────────────────────────────────────── */
+.feat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:42px}
+.f{padding:24px;border-radius:18px;border:1px solid var(--line);background:var(--card);transition:border-color .3s,transform .3s}
+.f:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.18)}
+.f .ic{width:34px;height:34px;margin-bottom:14px;color:var(--warm)}
+.f h4{font-size:16.5px;margin:0 0 6px;font-weight:600}
+.f p{color:var(--muted);font-size:14px;margin:0}
+@media(max-width:780px){.feat{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.feat{grid-template-columns:1fr}}
+
+/* ── pricing ───────────────────────────────────────────────── */
+.price{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px;max-width:760px}
+.plan{position:relative;border-radius:20px;padding:28px;border:1px solid var(--line);background:linear-gradient(160deg,var(--card),transparent)}
+.plan.feature{border-color:rgba(139,92,246,.4);box-shadow:0 0 50px rgba(139,92,246,.12)}
+.plan .pill{position:absolute;top:18px;right:18px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;
+  color:#c4b5fd;background:rgba(139,92,246,.16);padding:4px 10px;border-radius:999px;font-weight:600}
+.plan .pname{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.plan .amt{font-family:var(--serif);font-size:42px;margin:8px 0 2px;letter-spacing:-.02em}
+.plan .amt small{font-family:var(--sans);font-size:16px;color:var(--muted)}
+.plan .free{color:var(--warm);font-size:14.5px;font-weight:500;margin-top:6px}
+.pnote{color:var(--faint);font-size:13px;margin-top:16px;max-width:60ch}
+@media(max-width:560px){.price{grid-template-columns:1fr}}
+
+/* ── final cta ─────────────────────────────────────────────── */
+.final{text-align:center;padding:96px 0 64px}
+.final h2{font-family:var(--serif);font-weight:400;font-size:clamp(32px,5vw,56px);
+  letter-spacing:-.02em;line-height:1.05;margin:0 0 26px}
+.final h2 .it{font-style:italic;color:transparent;background:linear-gradient(105deg,var(--kbs),var(--mbc));-webkit-background-clip:text;background-clip:text}
+
+/* ── footer ────────────────────────────────────────────────── */
+footer{position:relative;z-index:2;border-top:1px solid var(--line);padding:40px 0 56px;margin-top:40px}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+.foot .l{display:flex;gap:11px;align-items:center;color:var(--muted);font-size:14px}
+.foot .l img{width:26px;height:26px;border-radius:7px}
+.foot nav,.foot .links{display:flex;gap:22px}
+.foot a{color:var(--muted);text-decoration:none;font-size:14px;transition:color .2s}
+.foot a:hover{color:var(--ink)}
+.foot .fine{width:100%;color:var(--faint);font-size:12.5px;margin-top:8px}
+
+/* ── reveal ────────────────────────────────────────────────── */
+.js .rise{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+.rise.in{opacity:1;transform:none}
+.d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important}
+  .rise{opacity:1;transform:none;transition:none}
+}
+</style>
+</head>
+<body>
+
+<div class="atmos">
+  <div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+</div>
+<div class="stars" id="stars"></div>
+<div class="grain"></div>
+
+<nav>
+  <div class="brand"><img src="/shots/app-icon.png" alt=""><b>Night Replays</b></div>
+  <div class="nav-links">
+    <a href="#stations">Stations</a>
+    <a href="#mix">Mix</a>
+    <a href="#pricing">Pricing</a>
+    <a class="nav-cta" href="/listen">Listen</a>
+  </div>
+</nav>
+
+<main>
+<div class="wrap">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div>
+      <div class="kicker rise">
+        <span class="eq"><b></b><b></b><b></b><b></b></span>
+        KBS 2FM · MBC FM4U — Korea's late-night radio
+      </div>
+      <h1 class="rise d1">Last night's radio,<br><span class="em">song by song.</span></h1>
+      <p class="lead rise d2">The whole late-night show, replayed — the DJ's talk mixed back in with the songs. Pick any night, press play, and drift off to sweet Korean radio.</p>
+      <div class="cta-row rise d3">
+        <a class="btn btn-primary" href="/listen">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Listen tonight
+        </a>
+        <a class="btn btn-ghost" href="#mix">How Mix works</a>
+      </div>
+      <p class="trial rise d4"><b>Free for 7 days</b>, then $9.99 / year · or <b>3 days free</b>, then $0.99 / month</p>
+    </div>
+    <div class="devices rise d2">
+      <div class="phone kbs"><img src="/shots/phone-kbs.png" alt="Night You — KBS 2FM replay, song by song" loading="eager" width="1320" height="2868"></div>
+      <div class="phone mbc"><img src="/shots/phone-mbc.png" alt="Perfect Day — MBC FM4U replay, song by song" loading="lazy" width="1320" height="2868"></div>
+    </div>
+  </header>
+
+  <!-- STATIONS -->
+  <section id="stations">
+    <p class="eyebrow rise">Two stations, every night</p>
+    <h2 class="sec-h rise d1">Night You. <span class="it">Perfect Day.</span></h2>
+    <p class="sec-sub rise d2">Two beloved Korean late-night programs, ready to replay the morning after — each song matched to your music app, in the exact order it aired.</p>
+    <div class="stations">
+      <div class="st kbs rise d1">
+        <span class="freq">YOU</span>
+        <span class="tag">KBS 2FM · Korean</span>
+        <h3>Night You</h3>
+        <p>밤을 잊은 그대에게 — the long-running midnight companion. All-Korean ballads and indie, for the quiet hours.</p>
+      </div>
+      <div class="st mbc rise d2">
+        <span class="freq">DAY</span>
+        <span class="tag">MBC FM4U · Pop &amp; Korean</span>
+        <h3>Perfect Day</h3>
+        <p>완벽한 하루 이상순입니다 — warm, wandering, half Korean and half international pop. A soft landing into sleep.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MIX -->
+  <section id="mix">
+    <div class="showcase">
+      <div class="rise">
+        <p class="eyebrow">Premium · Mix mode</p>
+        <h2 class="sec-h">The DJ's talk,<br><span class="it">mixed with the songs.</span></h2>
+        <p class="sec-sub">Mix plays the show's actual replay audio — the DJ between tracks, the intros, the late-night murmur — and when each song comes up, it slips in the full track from your library, then hands the night back to the radio.</p>
+        <ol class="steps">
+          <li><b>Pick a night</b><span>Any date in the archive, back years.</span></li>
+          <li><b>Press Mix</b><span>The replay streams; songs are cued to their real broadcast moments.</span></li>
+          <li><b>Drift off</b><span>Full songs through Apple Music, the DJ in between — hands-free till morning.</span></li>
+        </ol>
+      </div>
+      <div class="shot-frame glow-mbc rise d2">
+        <img src="/shots/phone-mbc.png" alt="Mix mode — replay audio with matched songs" loading="lazy" width="1320" height="2868">
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section>
+    <p class="eyebrow rise">What's inside</p>
+    <h2 class="sec-h rise d1">Built for the small hours.</h2>
+    <div class="feat">
+      <div class="f rise"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h16M7 9V5.5A1.5 1.5 0 0 1 8.5 4h7A1.5 1.5 0 0 1 17 5.5V9"/><rect x="4" y="9" width="16" height="11" rx="2"/><circle cx="9" cy="14.5" r="2"/><path d="M14 13h3M14 16h3"/></svg>
+        <h4>Replay the talk</h4><p>The night's DJ-talk audio, not just a tracklist — the real show, on demand.</p></div>
+      <div class="f rise d1"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 17V7M9 20V4M14 17V7M19 20V4"/></svg>
+        <h4>Mix mode</h4><p>Radio and full songs, woven together and cued to the second. Needs Apple Music.</p></div>
+      <div class="f rise d2"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+        <h4>Any night</h4><p>Scroll to any date and press play. Thousands of nights, song-matched and ready.</p></div>
+      <div class="f rise"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M8 5.5v13M16 5.5v13" opacity=".5"/><path d="M9 9l7 3-7 3z" fill="currentColor" stroke="none"/></svg>
+        <h4>Play All</h4><p>Open every track in Apple Music, Spotify, YouTube Music, Melon, Genie, Bugs or FLO.</p></div>
+      <div class="f rise d1"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="6" width="10" height="12" rx="3"/><path d="M9 6l.6-2.2A1.5 1.5 0 0 1 11 2.7h2a1.5 1.5 0 0 1 1.4 1.1L15 6M9 18l.6 2.2a1.5 1.5 0 0 0 1.4 1.1h2a1.5 1.5 0 0 0 1.4-1.1L15 18"/></svg>
+        <h4>On your wrist</h4><p>An Apple Watch app — pick a night, hit Replay or Mix, right from your wrist.</p></div>
+      <div class="f rise d2"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 3v6c0 4.5-3.2 7.6-8 9-4.8-1.4-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <h4>No account, no ads</h4><p>No sign-up, no analytics, no tracking. Just you and the radio.</p></div>
+    </div>
+  </section>
+
+  <!-- WATCH + IPAD strip -->
+  <section>
+    <div class="showcase flip">
+      <div class="rise">
+        <p class="eyebrow">Everywhere you wind down</p>
+        <h2 class="sec-h">iPhone, iPad,<br><span class="it">and Apple Watch.</span></h2>
+        <p class="sec-sub">Big-screen on the iPad by the bed, or a glance-and-go dial on the Watch. Same nights, same one-tap replay.</p>
+      </div>
+      <div class="ipad-wrap rise d2">
+        <div class="shot-frame ipad">
+          <img src="/shots/ipad-kbs.png" alt="Night Replays on iPad" loading="lazy" width="2064" height="2752">
+        </div>
+        <div class="watch"><img src="/shots/watch.png" alt="Night Replays on Apple Watch" loading="lazy" width="422" height="514"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <p class="eyebrow rise">Premium</p>
+    <h2 class="sec-h rise d1">Two ways in. <span class="it">Start free.</span></h2>
+    <p class="sec-sub rise d2">Premium unlocks Replay, Mix, and Play All. Try it free — cancel anytime before the trial ends.</p>
+    <div class="price">
+      <div class="plan feature rise d1">
+        <span class="pill">Best value</span>
+        <div class="pname">Yearly</div>
+        <div class="amt">$9.99<small> / year</small></div>
+        <div class="free">★ Free for 7 days</div>
+      </div>
+      <div class="plan rise d2">
+        <div class="pname">Monthly</div>
+        <div class="amt">$0.99<small> / month</small></div>
+        <div class="free">★ Free for 3 days</div>
+      </div>
+    </div>
+    <p class="pnote rise d2">Mix and Play All open tracks in your own music apps. Mix mode requires an Apple Music subscription. Prices may vary by region.</p>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final">
+    <h2 class="rise">It's late. <span class="it">Press play.</span></h2>
+    <div class="cta-row rise d1" style="justify-content:center">
+      <a class="btn btn-primary" href="/listen">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        Listen tonight
+      </a>
+      <a class="btn btn-ghost" href="https://apps.apple.com/search?term=Night%20Replays">On the App Store</a>
+    </div>
+  </section>
+
+</div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div class="l"><img src="/shots/app-icon.png" alt="">Night Replays</div>
+    <div class="links">
+      <a href="/listen">Listen</a>
+      <a href="/privacy/">Privacy</a>
+      <a href="/terms/">Terms</a>
+    </div>
+    <p class="fine">Night Replays is an independent listening companion and is not affiliated with or endorsed by KBS or MBC. All radio programs, songs, and artwork belong to their respective owners. · nightreplays.nvis.io</p>
+  </div>
+</footer>
+
+<script>
+// starfield
+(function(){
+  const s=document.getElementById('stars');if(!s)return;
+  const n=window.innerWidth<700?28:54;let h='';
+  for(let i=0;i<n;i++){
+    h+=`<i style="left:${Math.random()*100}%;top:${Math.random()*100}%;animation-delay:${(Math.random()*5).toFixed(2)}s"></i>`;
+  }
+  s.innerHTML=h;
+})();
+// scroll reveal
+(function(){
+  const els=document.querySelectorAll('.rise');
+  if(!('IntersectionObserver'in window)){els.forEach(e=>e.classList.add('in'));return;}
+  const io=new IntersectionObserver((ents)=>{
+    ents.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}});
+  },{threshold:.12,rootMargin:'0px 0px -8% 0px'});
+  els.forEach(e=>io.observe(e));
+  // hero in immediately
+  document.querySelectorAll('.hero .rise').forEach(e=>e.classList.add('in'));
+})();
+</script>
+</body>
+</html>
