@@ -28,6 +28,9 @@ jobs:
         run: |
           mkdir -p _site
           cp -r kbs mbc _site/
+          # Landing page (English intro) at the site root + its screenshots.
+          cp index.html _site/index.html
+          cp -r shots _site/shots
           # CNAME pins the custom subdomain (nightreplays.nvis.io); .nojekyll
           # disables Jekyll so directories named like Jekyll specials don't trip
           # the processor.
