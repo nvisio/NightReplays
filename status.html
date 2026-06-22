@@ -15,6 +15,8 @@
     --present-kbs-light: #56d364;
     --present-mbc: #4d8de5;
     --present-mbc-light: #79afff;
+    --present-sbs: #ff6f61;
+    --present-sbs-light: #ff9d93;
     --missing: #3a2128;
     --no-show: #1b1f29;
     --accent: #5fa8ff;
@@ -67,6 +69,8 @@
   .day.present-kbs:hover { outline: 2px solid var(--present-kbs-light); }
   .day.present-mbc { background: var(--present-mbc); cursor: pointer; }
   .day.present-mbc:hover { outline: 2px solid var(--present-mbc-light); }
+  .day.present-sbs { background: var(--present-sbs); cursor: pointer; }
+  .day.present-sbs:hover { outline: 2px solid var(--present-sbs-light); }
   .day.missing { background: var(--missing); }
   .day.no-show { background: var(--no-show); }
   .day.future { background: transparent; }
@@ -145,10 +149,28 @@
     </div>
   </section>
 
+  <section class="section" id="sbs-section">
+    <h2>SBS '파워 스테이션'</h2>
+    <p class="sub">SBS Power FM · 매일 03:00–05:00 (선곡표만)</p>
+    <div class="stats" id="sbs-stats">
+      <div class="stat" data-k="processed"><div class="num loading">…</div><div class="label">processed</div></div>
+      <div class="stat" data-k="missing"><div class="num loading">…</div><div class="label">missing</div></div>
+      <div class="stat" data-k="matched"><div class="num loading">…</div><div class="label">matched</div></div>
+      <div class="stat" data-k="latest"><div class="num loading">…</div><div class="label">latest</div></div>
+    </div>
+    <div class="controls"><label>연도<select id="sbs-year"></select></label></div>
+    <div id="sbs-years"></div>
+    <div class="legend">
+      <span><span class="swatch" style="background: var(--present-sbs)"></span>processed</span>
+      <span><span class="swatch" style="background: var(--missing)"></span>missing</span>
+      <span>셀 투명도 = appleMusicId 매칭 비율</span>
+    </div>
+  </section>
+
   <footer>
     데이터: <a href="manifest.json">manifest.json</a> ·
     소스: <a href="https://github.com/nvisio/NightReplays">nvisio/NightReplays</a> ·
-    클릭한 날짜의 JSON: <code>/kbs/YYYYMMDD.json</code> or <code>/mbc/YYYYMMDD.json</code>
+    클릭한 날짜의 JSON: <code>/kbs/YYYYMMDD.json</code> or <code>/mbc/YYYYMMDD.json</code> or <code>/sbs/YYYYMMDD.json</code>
   </footer>
 </div>
 <div id="tooltip" role="tooltip"></div>
@@ -341,6 +363,16 @@ async function load() {
     statsEl: $("mbc-stats"),
     yearsEl: $("mbc-years"),
     yearSel: $("mbc-year"),
+  });
+  renderProgram({
+    dates: (manifest.sbs || []).slice().sort(),
+    stats: manifest.sbsStats || {},
+    presentClass: "present-sbs",
+    pathPrefix: "/sbs",
+    noShowDow: null,
+    statsEl: $("sbs-stats"),
+    yearsEl: $("sbs-years"),
+    yearSel: $("sbs-year"),
   });
 }
 
