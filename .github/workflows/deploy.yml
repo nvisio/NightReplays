@@ -18,7 +18,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || steps.deployment_retry.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,5 +93,20 @@ jobs:
         with:
           path: _site
 
+      # deploy-pages looks the artifact up right after the upload. On 2026-11-23
+      # and 11-24 that lookup ran ~0.3s after the upload finalized and came back
+      # empty ("No artifacts named github-pages were found"), failing the deploy.
+      # Re-running the whole job can't recover — it uploads a second github-pages
+      # artifact and deploy-pages then rejects the run ("Multiple artifacts") —
+      # so retry the deploy step itself, once, inside the same job.
       - id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Wait before retrying the deploy
+        if: steps.deployment.outcome == 'failure'
+        run: sleep 20
+
+      - id: deployment_retry
+        if: steps.deployment.outcome == 'failure'
         uses: actions/deploy-pages@v4
